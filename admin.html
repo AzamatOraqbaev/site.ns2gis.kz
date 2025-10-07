@@ -180,6 +180,7 @@
         }
 
         .file-upload-input {
+            width: 100%;
             padding: 12px;
             border: 2px dashed var(--color-border);
             border-radius: 8px;
@@ -188,27 +189,23 @@
             cursor: pointer;
             text-align: center;
             transition: all var(--transition);
+            margin-bottom: 10px;
         }
 
         .file-upload-input:hover {
             border-color: var(--color-red);
         }
 
-        .file-upload-input.has-image {
-            border-style: solid;
-            background: var(--color-card);
-        }
-
         .file-upload-preview {
             max-width: 100%;
             max-height: 200px;
-            margin-top: 10px;
             border-radius: 8px;
             display: none;
         }
 
         .file-upload-preview.show {
             display: block;
+            margin: 10px auto;
         }
 
         .admin-actions {
@@ -320,7 +317,6 @@
 
         .item-header {
             display: flex;
-            justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 10px;
         }
@@ -333,6 +329,7 @@
             background-position: center;
             margin-right: 15px;
             flex-shrink: 0;
+            background: var(--color-card);
         }
 
         .item-info {
@@ -598,7 +595,7 @@
                     <form id="category-form">
                         <div class="form-group">
                             <label for="category-id">ID категории (английскими буквами):</label>
-                            <input type="text" id="category-id" placeholder="nap example: breakfast, drinks" required>
+                            <input type="text" id="category-id" placeholder="Например: breakfast, drinks" required>
                         </div>
                         
                         <div class="form-group">
@@ -656,7 +653,21 @@
 
             loadMenuData() {
                 const saved = localStorage.getItem('musetti-menu');
-                return saved ? JSON.parse(saved) : {};
+                if (saved) {
+                    return JSON.parse(saved);
+                }
+                
+                // ДЕМО-ДАННЫЕ - можно удалить после тестирования
+                return {
+                    breakfast: [
+                        { id: 1, name: "Итальянский завтрак", description: "Круассан, капучино и свежевыжатый апельсиновый сок", price: 2500 },
+                        { id: 2, name: "Авокадо-тост", description: "Хлеб на закваске с авокадо, яйцом пашот и рукколой", price: 2800 }
+                    ],
+                    drinks: [
+                        { id: 3, name: "Капучино", description: "Классический итальянский капучино с плотной пенкой", price: 1200 },
+                        { id: 4, name: "Лате", description: "Нежный кофейный напиток с молоком", price: 1400 }
+                    ]
+                };
             }
 
             loadCategories() {
@@ -667,15 +678,15 @@
                 
                 // Категории по умолчанию
                 return {
-                    zavtraki: { name: 'Завтраки', emoji: '🥐' },
-                    vypechka: { name: 'Выпечка', emoji: '🥖' },
-                    sendvichi: { name: 'Сэндвичи', emoji: '🥪' },
-                    salaty: { name: 'Салаты', emoji: '🥬' },
-                    osnovnye: { name: 'Основные блюда', emoji: '🍝' },
-                    myaso: { name: 'Мясо и рыба', emoji: '🥩' },
-                    deserty: { name: 'Десерты', emoji: '🍰' },
-                    napitki: { name: 'Напитки', emoji: '☕' },
-                    alko: { name: 'Алкоголь', emoji: '🍷' }
+                    breakfast: { name: 'Завтраки', emoji: '🥐' },
+                    drinks: { name: 'Напитки', emoji: '☕' },
+                    bakery: { name: 'Выпечка', emoji: '🥐' },
+                    sandwiches: { name: 'Сэндвичи', emoji: '🥪' },
+                    salads: { name: 'Салаты', emoji: '🥗' },
+                    main: { name: 'Основные блюда', emoji: '🍝' },
+                    meat: { name: 'Мясо и рыба', emoji: '🥩' },
+                    desserts: { name: 'Десерты', emoji: '🍰' },
+                    alcohol: { name: 'Алкоголь', emoji: '🍷' }
                 };
             }
 
@@ -690,9 +701,11 @@
             getNextId() {
                 let maxId = 0;
                 Object.values(this.menuData).forEach(category => {
-                    category.forEach(item => {
-                        if (item.id > maxId) maxId = item.id;
-                    });
+                    if (category && Array.isArray(category)) {
+                        category.forEach(item => {
+                            if (item.id > maxId) maxId = item.id;
+                        });
+                    }
                 });
                 return maxId + 1;
             }
@@ -737,7 +750,7 @@
                             ${items.map(item => `
                                 <div class="item-card">
                                     <div class="item-header">
-                                        ${item.image ? `<div class="item-image-preview" style="background-image: url('${item.image}')"></div>` : ''}
+                                        ${item.image ? `<div class="item-image-preview" style="background-image: url('${item.image}')"></div>` : '<div class="item-image-preview"></div>'}
                                         <div class="item-info">
                                             <div class="item-name">${item.name}</div>
                                             <div class="item-price">${item.price.toLocaleString()} ₸</div>
@@ -879,10 +892,17 @@
                     
                     this.currentImage = itemToEdit.image;
                     const preview = document.getElementById('image-preview');
+                    const fileInput = document.getElementById('item-image');
+                    
                     if (itemToEdit.image) {
                         preview.src = itemToEdit.image;
                         preview.classList.add('show');
+                    } else {
+                        preview.classList.remove('show');
                     }
+                    
+                    // Сбрасываем file input
+                    fileInput.value = '';
 
                     document.getElementById('add-item').style.display = 'none';
                     document.getElementById('update-item').style.display = 'block';
@@ -969,6 +989,12 @@
                     return;
                 }
 
+                // Проверяем валидность ID
+                if (!/^[a-z]+$/.test(id)) {
+                    alert('ID категории должен содержать только английские буквы в нижнем регистре!');
+                    return;
+                }
+
                 if (this.categories[id]) {
                     alert('Категория с таким ID уже существует!');
                     return;
@@ -997,7 +1023,7 @@
             }
 
             deleteCategory(id) {
-                if (!confirm('Вы уверены, что хотите удалить эту категорию?')) return;
+                if (!confirm('Вы уверены, что хотите удалить эту категорию? Все блюда в этой категории будут удалены!')) return;
 
                 delete this.categories[id];
                 delete this.menuData[id];
@@ -1023,6 +1049,8 @@
             clearForm() {
                 document.getElementById('menu-form').reset();
                 document.getElementById('image-preview').classList.remove('show');
+                document.getElementById('image-preview').src = '';
+                document.getElementById('item-image').value = '';
                 this.currentImage = null;
             }
 
@@ -1033,6 +1061,13 @@
             handleImageUpload(event) {
                 const file = event.target.files[0];
                 if (file) {
+                    // Проверяем размер файла (максимум 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Файл слишком большой! Максимальный размер: 5MB');
+                        event.target.value = '';
+                        return;
+                    }
+
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         this.currentImage = e.target.result;

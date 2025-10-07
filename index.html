@@ -740,7 +740,21 @@
 
             loadMenuData() {
                 const saved = localStorage.getItem('musetti-menu');
-                return saved ? JSON.parse(saved) : {};
+                if (saved) {
+                    return JSON.parse(saved);
+                }
+                
+                // ДЕМО-ДАННЫЕ
+                return {
+                    breakfast: [
+                        { id: 1, name: "Итальянский завтрак", description: "Круассан, капучино и свежевыжатый апельсиновый сок", price: 2500 },
+                        { id: 2, name: "Авокадо-тост", description: "Хлеб на закваске с авокадо, яйцом пашот и рукколой", price: 2800 }
+                    ],
+                    drinks: [
+                        { id: 3, name: "Капучино", description: "Классический итальянский капучино с плотной пенкой", price: 1200 },
+                        { id: 4, name: "Лате", description: "Нежный кофейный напиток с молоком", price: 1400 }
+                    ]
+                };
             }
 
             loadCategories() {
@@ -751,15 +765,15 @@
                 
                 // Категории по умолчанию
                 return {
-                    zavtraki: { name: 'Завтраки', emoji: '🥐' },
-                    vypechka: { name: 'Выпечка', emoji: '🥖' },
-                    sendvichi: { name: 'Сэндвичи', emoji: '🥪' },
-                    salaty: { name: 'Салаты', emoji: '🥬' },
-                    osnovnye: { name: 'Основные блюда', emoji: '🍝' },
-                    myaso: { name: 'Мясо и рыба', emoji: '🥩' },
-                    deserty: { name: 'Десерты', emoji: '🍰' },
-                    napitki: { name: 'Напитки', emoji: '☕' },
-                    alko: { name: 'Алкоголь', emoji: '🍷' }
+                    breakfast: { name: 'Завтраки', emoji: '🥐' },
+                    drinks: { name: 'Напитки', emoji: '☕' },
+                    bakery: { name: 'Выпечка', emoji: '🥐' },
+                    sandwiches: { name: 'Сэндвичи', emoji: '🥪' },
+                    salads: { name: 'Салаты', emoji: '🥗' },
+                    main: { name: 'Основные блюда', emoji: '🍝' },
+                    meat: { name: 'Мясо и рыба', emoji: '🥩' },
+                    desserts: { name: 'Десерты', emoji: '🍰' },
+                    alcohol: { name: 'Алкоголь', emoji: '🍷' }
                 };
             }
 
@@ -768,13 +782,40 @@
                 let html = '';
 
                 Object.entries(this.categories).forEach(([id, category]) => {
-                    if (this.menuData[id] && this.menuData[id].length > 0) {
-                        const isActive = id === 'zavtraki' ? 'active' : '';
+                    const items = this.menuData[id];
+                    if (items && items.length > 0) {
+                        const isActive = id === Object.keys(this.categories)[0] ? 'active' : '';
                         html += `<a href="#${id}" class="${isActive}">${category.name}</a>`;
                     }
                 });
 
                 nav.innerHTML = html;
+
+                // Добавляем обработчики событий для навигации
+                this.bindNavigationEvents();
+            }
+
+            bindNavigationEvents() {
+                // Smooth scroll for navigation
+                document.querySelectorAll('nav a').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const targetId = this.getAttribute('href');
+                        const targetElement = document.querySelector(targetId);
+                        if (targetElement) {
+                            window.scrollTo({
+                                top: targetElement.offsetTop - 140,
+                                behavior: 'smooth'
+                            });
+                            
+                            // Обновляем активную ссылку
+                            document.querySelectorAll('nav a').forEach(link => {
+                                link.classList.remove('active');
+                            });
+                            this.classList.add('active');
+                        }
+                    });
+                });
             }
 
             renderMenu() {
@@ -790,7 +831,7 @@
                                 <div class="menu-items">
                                     ${items.map(item => `
                                         <div class="menu-item">
-                                            <div class="menu-item-image" style="${item.image ? `background-image: url('${item.image}')` : `background: linear-gradient(45deg, #2a2a2a, #1a1a1a); color: var(--color-red); font-size: 2.5rem; display: flex; align-items: center; justify-content: center;`}">
+                                            <div class="menu-item-image" style="${item.image ? `background-image: url('${item.image}')` : ''}">
                                                 ${!item.image ? (category.emoji || '🍽️') : ''}
                                             </div>
                                             <div class="menu-details">
@@ -840,10 +881,13 @@
                         const price = parseInt(e.target.dataset.price);
                         this.addItem(id, name, price);
                         
-                        e.target.style.transform = 'scale(0.9)';
+                        // Анимация кнопки
+                        e.target.textContent = '✓';
+                        e.target.style.background = 'var(--color-success)';
                         setTimeout(() => {
-                            e.target.style.transform = 'scale(1)';
-                        }, 150);
+                            e.target.textContent = '+';
+                            e.target.style.background = 'var(--color-red)';
+                        }, 1000);
                     }
                 });
 
@@ -867,34 +911,42 @@
                         this.closeCart();
                     }
                 });
+
+                // Обработка клавиши Escape
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.closeCart();
+                    }
+                });
             }
 
             addItem(id, name, price) {
-                const existingItem = this.items.find(item => item.id === id);
+                const existingItem = this.items.find(item => item.id == id);
                 
                 if (existingItem) {
                     existingItem.quantity += 1;
                 } else {
                     this.items.push({
-                        id,
-                        name,
-                        price,
+                        id: id,
+                        name: name,
+                        price: price,
                         quantity: 1
                     });
                 }
                 
                 this.saveToStorage();
                 this.updateCartDisplay();
+                this.showAddNotification(name);
             }
 
             removeItem(id) {
-                this.items = this.items.filter(item => item.id !== id);
+                this.items = this.items.filter(item => item.id != id);
                 this.saveToStorage();
                 this.updateCartDisplay();
             }
 
             updateQuantity(id, change) {
-                const item = this.items.find(item => item.id === id);
+                const item = this.items.find(item => item.id == id);
                 if (item) {
                     item.quantity += change;
                     if (item.quantity <= 0) {
@@ -943,12 +995,37 @@
                 cartTotalModal.textContent = `Итого: ${this.total.toLocaleString()} ₸`;
             }
 
+            showAddNotification(itemName) {
+                // Создаем временное уведомление
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 100px;
+                    right: 30px;
+                    background: var(--color-success);
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    z-index: 10000;
+                    animation: slideIn 0.3s ease;
+                `;
+                notification.textContent = `✅ ${itemName} добавлен в корзину`;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 2000);
+            }
+
             openCart() {
                 document.getElementById('cart-modal').style.display = 'block';
+                document.body.style.overflow = 'hidden';
             }
 
             closeCart() {
                 document.getElementById('cart-modal').style.display = 'none';
+                document.body.style.overflow = 'auto';
             }
 
             checkout() {
@@ -957,12 +1034,22 @@
                     return;
                 }
                 
+                const orderDetails = this.items.map(item => 
+                    `${item.name} - ${item.quantity} × ${item.price} ₸ = ${item.quantity * item.price} ₸`
+                ).join('\n');
+                
                 const total = this.total.toLocaleString();
-                alert(`Заказ оформлен!\nОбщая сумма: ${total} ₸\nСпасибо за покупку!`);
-                this.items = [];
-                this.saveToStorage();
-                this.updateCartDisplay();
-                this.closeCart();
+                const confirmation = confirm(
+                    `Ваш заказ:\n\n${orderDetails}\n\nОбщая сумма: ${total} ₸\n\nПодтвердить заказ?`
+                );
+                
+                if (confirmation) {
+                    alert(`Заказ оформлен!\nОжидайте, с вами свяжутся для подтверждения.\nОбщая сумма: ${total} ₸\nСпасибо за покупку!`);
+                    this.items = [];
+                    this.saveToStorage();
+                    this.updateCartDisplay();
+                    this.closeCart();
+                }
             }
 
             saveToStorage() {
@@ -977,6 +1064,7 @@
             }
         }
 
+        // Инициализация корзины
         const cart = new Cart();
 
         // Navigation scrolling with active section update
@@ -990,11 +1078,15 @@
             const navLinks = document.querySelectorAll('nav a');
             
             let currentSection = '';
+            let minDistance = Infinity;
             
             sections.forEach(section => {
                 const sectionTop = section.offsetTop - 160;
                 const sectionHeight = section.offsetHeight;
-                if (window.scrollY >= sectionTop && window.scrollY < sectionTop + sectionHeight) {
+                const distance = Math.abs(window.scrollY - sectionTop);
+                
+                if (distance < minDistance && window.scrollY >= sectionTop - 100) {
+                    minDistance = distance;
                     currentSection = section.getAttribute('id');
                 }
             });
@@ -1003,59 +1095,20 @@
                 link.classList.remove('active');
                 if (link.getAttribute('href') === `#${currentSection}`) {
                     link.classList.add('active');
-                    
-                    // Прокручиваем навигацию к активному элементу
-                    const navRect = nav.getBoundingClientRect();
-                    const linkRect = link.getBoundingClientRect();
-                    
-                    if (linkRect.left < navRect.left) {
-                        nav.scrollTo({
-                            left: nav.scrollLeft + (linkRect.left - navRect.left) - 10,
-                            behavior: 'smooth'
-                        });
-                    } else if (linkRect.right > navRect.right) {
-                        nav.scrollTo({
-                            left: nav.scrollLeft + (linkRect.right - navRect.right) + 10,
-                            behavior: 'smooth'
-                        });
-                    }
                 }
             });
         }
 
         // Обработчики для стрелок навигации
-        leftArrow.addEventListener('click', () => {
-            nav.scrollBy({ left: -200, behavior: 'smooth' });
-            // Обновляем активный раздел после прокрутки
-            setTimeout(updateActiveSectionOnScroll, 300);
-        });
-
-        rightArrow.addEventListener('click', () => {
-            nav.scrollBy({ left: 200, behavior: 'smooth' });
-            // Обновляем активный раздел после прокрутки
-            setTimeout(updateActiveSectionOnScroll, 300);
-        });
-
-        // Smooth scroll for navigation
-        document.querySelectorAll('nav a').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('href');
-                const targetElement = document.querySelector(targetId);
-                if (targetElement) {
-                    window.scrollTo({
-                        top: targetElement.offsetTop - 140,
-                        behavior: 'smooth'
-                    });
-                    
-                    // Обновляем активную ссылку
-                    document.querySelectorAll('nav a').forEach(link => {
-                        link.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                }
+        if (leftArrow && rightArrow) {
+            leftArrow.addEventListener('click', () => {
+                nav.scrollBy({ left: -200, behavior: 'smooth' });
             });
-        });
+
+            rightArrow.addEventListener('click', () => {
+                nav.scrollBy({ left: 200, behavior: 'smooth' });
+            });
+        }
 
         // Active section highlighting on page scroll
         window.addEventListener('scroll', updateActiveSectionOnScroll);
@@ -1064,7 +1117,25 @@
         document.addEventListener('DOMContentLoaded', updateActiveSectionOnScroll);
 
         // Обновляем активный раздел при прокрутке навигации
-        nav.addEventListener('scroll', updateActiveSectionOnScroll);
+        if (nav) {
+            nav.addEventListener('scroll', updateActiveSectionOnScroll);
+        }
+
+        // Добавляем CSS для анимации уведомлений
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
