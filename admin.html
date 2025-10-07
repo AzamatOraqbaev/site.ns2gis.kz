@@ -6,7 +6,6 @@
     <title>Админ-панель | Caffè Musetti</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* Стили остаются такими же как в предыдущей версии */
         :root {
             --color-red: #E30613;
             --color-black: #000000;
@@ -267,14 +266,6 @@
             padding-bottom: 10px;
             border-bottom: 1px solid var(--color-border);
             font-size: 1.2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .category-actions {
-            display: flex;
-            gap: 10px;
         }
 
         .item-card {
@@ -436,37 +427,31 @@
             font-size: 0.9rem;
         }
 
+        .backup-section {
+            background: var(--color-card);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--color-border);
+            margin-top: 30px;
+        }
+
+        .backup-section h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--color-red);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
         @media screen and (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
-            .header h1 {
-                font-size: 2rem;
-            }
-            .tabs {
-                flex-direction: column;
-            }
-            .admin-actions {
-                flex-direction: column;
-            }
-            .admin-btn {
-                width: 100%;
-            }
-            .item-header {
-                flex-direction: column;
-                gap: 10px;
-            }
-            .item-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-            .edit-btn, .delete-btn {
-                flex: 1;
-                text-align: center;
-            }
-            .categories-list {
-                grid-template-columns: 1fr;
-            }
+            body { padding: 15px; }
+            .header h1 { font-size: 2rem; }
+            .tabs { flex-direction: column; }
+            .admin-actions { flex-direction: column; }
+            .admin-btn { width: 100%; }
+            .item-header { flex-direction: column; gap: 10px; }
+            .item-actions { width: 100%; justify-content: space-between; }
+            .edit-btn, .delete-btn { flex: 1; text-align: center; }
+            .categories-list { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -481,6 +466,7 @@
         <div class="tabs">
             <button class="tab active" data-tab="menu">Управление меню</button>
             <button class="tab" data-tab="categories">Управление категориями</button>
+            <button class="tab" data-tab="backup">Резервное копирование</button>
         </div>
 
         <div class="tab-content active" id="menu-tab">
@@ -491,7 +477,7 @@
                         <div class="form-group">
                             <label for="category-select">Категория:</label>
                             <select id="category-select" required>
-                                <!-- Категории будут загружены динамически -->
+                                <option value="">Выберите категорию</option>
                             </select>
                         </div>
                         
@@ -535,7 +521,7 @@
                         </select>
                     </div>
                     <div class="items-list" id="items-list">
-                        <!-- Список блюд будет здесь -->
+                        <div class="empty-state">Загрузка...</div>
                     </div>
                 </div>
             </div>
@@ -570,8 +556,23 @@
                 <div class="items-section">
                     <h2>Существующие категории</h2>
                     <div class="categories-list" id="categories-list">
-                        <!-- Список категорий будет здесь -->
+                        <div class="empty-state">Загрузка...</div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="backup-tab">
+            <div class="backup-section">
+                <h2>Резервное копирование данных</h2>
+                <div class="admin-actions">
+                    <button type="button" class="admin-btn primary" id="export-data">📥 Экспорт данных</button>
+                    <button type="button" class="admin-btn secondary" id="import-data">📤 Импорт данных</button>
+                    <input type="file" id="import-file" accept=".json" style="display: none">
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Статус системы:</label>
+                    <div id="system-status">Проверка...</div>
                 </div>
             </div>
         </div>
@@ -579,7 +580,18 @@
         <div class="stats-section">
             <h2>Статистика меню</h2>
             <div class="stats-grid" id="stats-grid">
-                <!-- Статистика будет здесь -->
+                <div class="stat-card">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Всего блюд</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Категорий с блюдами</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Всего категорий</div>
+                </div>
             </div>
         </div>
     </div>
@@ -587,84 +599,112 @@
     <script>
         class MenuManager {
             constructor() {
-                this.menuData = this.loadMenuData();
-                this.categories = this.loadCategories();
+                this.menuData = {};
+                this.categories = {};
                 this.currentEditId = null;
-                this.nextId = this.getNextId();
+                this.nextId = 1;
                 this.currentImage = null;
                 this.init();
             }
 
-            init() {
+            async init() {
+                await this.loadData();
                 this.renderCategorySelects();
                 this.renderItemsList();
                 this.renderCategoriesList();
                 this.renderStats();
                 this.bindEvents();
-                
-                // Добавляем начальные данные если их нет
-                if (Object.keys(this.menuData).length === 0) {
-                    this.addInitialData();
-                }
+                this.checkSystemStatus();
             }
 
-            loadMenuData() {
+            async loadData() {
                 try {
-                    const saved = localStorage.getItem('musetti-menu');
-                    return saved ? JSON.parse(saved) : {};
-                } catch (e) {
-                    console.error('Error loading menu data:', e);
-                    return {};
-                }
-            }
-
-            loadCategories() {
-                try {
-                    const saved = localStorage.getItem('musetti-categories');
-                    if (saved) {
-                        return JSON.parse(saved);
+                    const response = await fetch('api/get-menu.php');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.menuData = data.menu || {};
+                        this.categories = data.categories || {};
+                        this.nextId = this.getNextId();
+                        console.log('Data loaded successfully');
+                    } else {
+                        throw new Error(data.error || 'Failed to load data');
                     }
-                } catch (e) {
-                    console.error('Error loading categories:', e);
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                    alert('Ошибка загрузки данных: ' + error.message);
                 }
-                
-                // Категории по умолчанию
-                return {
-                    zavtraki: { name: 'Завтраки', emoji: '🥐' },
-                    vypechka: { name: 'Выпечка', emoji: '🥖' },
-                    sendvichi: { name: 'Сэндвичи', emoji: '🥪' },
-                    salaty: { name: 'Салаты', emoji: '🥗' },
-                    osnovnye: { name: 'Основные блюда', emoji: '🍝' },
-                    myaso: { name: 'Мясо и рыба', emoji: '🥩' },
-                    deserty: { name: 'Десерты', emoji: '🍰' },
-                    napitki: { name: 'Напитки', emoji: '☕' },
-                    alko: { name: 'Алкоголь', emoji: '🍷' }
-                };
             }
 
-            addInitialData() {
-                // Добавляем демо-данные
-                this.menuData = {
-                    zavtraki: [
-                        { id: 1, name: "Итальянский завтрак", description: "Круассан, капучино и свежевыжатый апельсиновый сок", price: 2500 },
-                        { id: 2, name: "Авокадо-тост", description: "Хлеб на закваске с авокадо, яйцом пашот и рукколой", price: 2800 }
-                    ],
-                    napitki: [
-                        { id: 3, name: "Капучино", description: "Классический итальянский капучино с плотной пенкой", price: 1200 },
-                        { id: 4, name: "Лате", description: "Нежный кофейный напиток с молоком", price: 1400 }
-                    ]
-                };
-                this.saveMenuData();
-                this.renderItemsList();
-                this.renderStats();
+            async saveMenuData() {
+                try {
+                    const response = await fetch('api/save-menu.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ menu: this.menuData })
+                    });
+                    
+                    const result = await response.json();
+                    if (!result.success) {
+                        throw new Error(result.error || 'Save failed');
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('Error saving menu:', error);
+                    alert('Ошибка сохранения: ' + error.message);
+                    return false;
+                }
             }
 
-            saveMenuData() {
-                localStorage.setItem('musetti-menu', JSON.stringify(this.menuData));
+            async saveCategories() {
+                try {
+                    const response = await fetch('api/save-categories.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ categories: this.categories })
+                    });
+                    
+                    const result = await response.json();
+                    if (!result.success) {
+                        throw new Error(result.error || 'Save failed');
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('Error saving categories:', error);
+                    alert('Ошибка сохранения категорий: ' + error.message);
+                    return false;
+                }
             }
 
-            saveCategories() {
-                localStorage.setItem('musetti-categories', JSON.stringify(this.categories));
+            async uploadImage(file) {
+                try {
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    
+                    const response = await fetch('api/upload-image.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        return result.url;
+                    } else {
+                        throw new Error(result.error || 'Upload failed');
+                    }
+                } catch (error) {
+                    console.error('Error uploading image:', error);
+                    // Fallback to base64
+                    return new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                }
             }
 
             getNextId() {
@@ -700,6 +740,7 @@
                 const filterCategory = document.getElementById('filter-category').value;
                 
                 let html = '';
+                let hasItems = false;
 
                 Object.entries(this.categories).forEach(([categoryId, category]) => {
                     const items = this.menuData[categoryId] || [];
@@ -707,11 +748,10 @@
                     
                     if (filterCategory !== 'all' && filterCategory !== categoryId) return;
 
+                    hasItems = true;
                     html += `
                         <div class="category-items">
-                            <div class="category-title">
-                                <span>${category.name} (${items.length})</span>
-                            </div>
+                            <div class="category-title">${category.name} (${items.length})</div>
                             ${items.map(item => `
                                 <div class="item-card">
                                     <div class="item-header">
@@ -732,7 +772,7 @@
                     `;
                 });
 
-                if (!html) {
+                if (!hasItems) {
                     html = '<div class="empty-state">Нет блюд в выбранной категории</div>';
                 }
 
@@ -786,7 +826,7 @@
                 `;
             }
 
-            addItem(event) {
+            async addItem(event) {
                 event.preventDefault();
                 
                 const category = document.getElementById('category-select').value;
@@ -799,12 +839,20 @@
                     return;
                 }
 
+                let imageUrl = this.currentImage;
+                
+                // Загружаем изображение если есть
+                const fileInput = document.getElementById('item-image');
+                if (fileInput.files[0]) {
+                    imageUrl = await this.uploadImage(fileInput.files[0]);
+                }
+
                 const newItem = {
                     id: this.nextId++,
                     name,
                     description,
                     price,
-                    image: this.currentImage
+                    image: imageUrl
                 };
 
                 if (!this.menuData[category]) {
@@ -812,13 +860,15 @@
                 }
 
                 this.menuData[category].push(newItem);
-                this.saveMenuData();
-                this.renderItemsList();
-                this.renderCategoriesList();
-                this.renderStats();
-                this.clearForm();
                 
-                alert('Блюдо успешно добавлено!');
+                const saved = await this.saveMenuData();
+                if (saved) {
+                    this.renderItemsList();
+                    this.renderCategoriesList();
+                    this.renderStats();
+                    this.clearForm();
+                    alert('Блюдо успешно добавлено!');
+                }
             }
 
             editItem(id) {
@@ -859,7 +909,7 @@
                 }
             }
 
-            updateItem() {
+            async updateItem() {
                 if (this.currentEditId === null) return;
 
                 const category = document.getElementById('category-select').value;
@@ -872,6 +922,15 @@
                     return;
                 }
 
+                let imageUrl = this.currentImage;
+                
+                // Загружаем новое изображение если есть
+                const fileInput = document.getElementById('item-image');
+                if (fileInput.files[0]) {
+                    imageUrl = await this.uploadImage(fileInput.files[0]);
+                }
+
+                // Удаляем товар из старой категории
                 let oldCategory = null;
                 Object.entries(this.menuData).forEach(([cat, items]) => {
                     const index = items.findIndex(item => item.id === this.currentEditId);
@@ -881,6 +940,7 @@
                     }
                 });
 
+                // Добавляем в новую категорию
                 if (!this.menuData[category]) {
                     this.menuData[category] = [];
                 }
@@ -890,19 +950,20 @@
                     name,
                     description,
                     price,
-                    image: this.currentImage
+                    image: imageUrl
                 });
 
-                this.saveMenuData();
-                this.renderItemsList();
-                this.renderCategoriesList();
-                this.renderStats();
-                this.cancelEdit();
-                
-                alert('Блюдо успешно обновлено!');
+                const saved = await this.saveMenuData();
+                if (saved) {
+                    this.renderItemsList();
+                    this.renderCategoriesList();
+                    this.renderStats();
+                    this.cancelEdit();
+                    alert('Блюдо успешно обновлено!');
+                }
             }
 
-            deleteItem(id) {
+            async deleteItem(id) {
                 if (!confirm('Вы уверены, что хотите удалить это блюдо?')) return;
 
                 Object.entries(this.menuData).forEach(([category, items]) => {
@@ -912,15 +973,16 @@
                     }
                 });
 
-                this.saveMenuData();
-                this.renderItemsList();
-                this.renderCategoriesList();
-                this.renderStats();
-                
-                alert('Блюдо успешно удалено!');
+                const saved = await this.saveMenuData();
+                if (saved) {
+                    this.renderItemsList();
+                    this.renderCategoriesList();
+                    this.renderStats();
+                    alert('Блюдо успешно удалено!');
+                }
             }
 
-            addCategory(event) {
+            async addCategory(event) {
                 event.preventDefault();
                 
                 const id = document.getElementById('category-id').value.toLowerCase().trim();
@@ -943,12 +1005,14 @@
                 }
 
                 this.categories[id] = { name, emoji };
-                this.saveCategories();
-                this.renderCategorySelects();
-                this.renderCategoriesList();
-                this.clearCategoryForm();
                 
-                alert('Категория успешно добавлена!');
+                const saved = await this.saveCategories();
+                if (saved) {
+                    this.renderCategorySelects();
+                    this.renderCategoriesList();
+                    this.clearCategoryForm();
+                    alert('Категория успешно добавлена!');
+                }
             }
 
             cancelEdit() {
@@ -1003,6 +1067,81 @@
                 document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
             }
 
+            exportData() {
+                const data = {
+                    menu: this.menuData,
+                    categories: this.categories,
+                    timestamp: new Date().toISOString(),
+                    version: '1.0'
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `musetti-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert('Данные экспортированы в файл!');
+            }
+
+            async importData(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        if (data.menu && data.categories) {
+                            if (confirm('Заменить текущие данные импортированными?')) {
+                                this.menuData = data.menu;
+                                this.categories = data.categories;
+                                
+                                await this.saveMenuData();
+                                await this.saveCategories();
+                                
+                                this.renderCategorySelects();
+                                this.renderItemsList();
+                                this.renderCategoriesList();
+                                this.renderStats();
+                                alert('Данные успешно импортированы!');
+                            }
+                        } else {
+                            alert('Неверный формат файла!');
+                        }
+                    } catch (error) {
+                        alert('Ошибка при импорте данных: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            }
+
+            async checkSystemStatus() {
+                try {
+                    const response = await fetch('api/get-menu.php');
+                    const data = await response.json();
+                    
+                    const statusElement = document.getElementById('system-status');
+                    if (data.success) {
+                        statusElement.innerHTML = '✅ Система работает нормально';
+                        statusElement.style.color = 'var(--color-success)';
+                    } else {
+                        statusElement.innerHTML = '❌ Ошибка: ' + (data.error || 'Неизвестная ошибка');
+                        statusElement.style.color = 'var(--color-red)';
+                    }
+                } catch (error) {
+                    const statusElement = document.getElementById('system-status');
+                    statusElement.innerHTML = '❌ Ошибка подключения: ' + error.message;
+                    statusElement.style.color = 'var(--color-red)';
+                }
+            }
+
             bindEvents() {
                 document.querySelectorAll('.tab').forEach(tab => {
                     tab.addEventListener('click', () => {
@@ -1032,6 +1171,18 @@
 
                 document.getElementById('category-form').addEventListener('submit', (e) => {
                     this.addCategory(e);
+                });
+
+                document.getElementById('export-data').addEventListener('click', () => {
+                    this.exportData();
+                });
+
+                document.getElementById('import-data').addEventListener('click', () => {
+                    document.getElementById('import-file').click();
+                });
+
+                document.getElementById('import-file').addEventListener('change', (e) => {
+                    this.importData(e);
                 });
             }
         }
