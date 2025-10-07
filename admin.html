@@ -6,6 +6,7 @@
     <title>Админ-панель | Caffè Musetti</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        /* Стили остаются такими же как в предыдущей версии */
         :root {
             --color-red: #E30613;
             --color-black: #000000;
@@ -40,7 +41,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             text-align: center;
             margin-bottom: 40px;
@@ -72,7 +72,6 @@
             border-color: var(--color-red);
         }
 
-        /* Tabs */
         .tabs {
             display: flex;
             margin-bottom: 30px;
@@ -95,10 +94,6 @@
             border-bottom-color: var(--color-red);
         }
 
-        .tab:hover {
-            color: var(--color-primary);
-        }
-
         .tab-content {
             display: none;
         }
@@ -107,7 +102,6 @@
             display: block;
         }
 
-        /* Admin Panel */
         .admin-panel {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -121,7 +115,6 @@
             }
         }
 
-        /* Form Styles */
         .form-section {
             background: var(--color-card);
             padding: 25px;
@@ -240,13 +233,6 @@
             box-shadow: var(--shadow);
         }
 
-        .admin-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Items List */
         .items-section {
             background: var(--color-card);
             padding: 25px;
@@ -263,16 +249,6 @@
 
         .category-filter {
             margin-bottom: 20px;
-        }
-
-        .category-filter select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            background: var(--color-bg);
-            color: var(--color-primary);
-            font-size: 1rem;
         }
 
         .items-list {
@@ -380,11 +356,6 @@
             color: white;
         }
 
-        .edit-btn:hover, .delete-btn:hover {
-            transform: translateY(-1px);
-            opacity: 0.9;
-        }
-
         .empty-state {
             text-align: center;
             color: var(--color-secondary);
@@ -392,7 +363,6 @@
             font-style: italic;
         }
 
-        /* Categories Management */
         .categories-list {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -425,7 +395,6 @@
             margin-bottom: 15px;
         }
 
-        /* Stats */
         .stats-section {
             background: var(--color-card);
             padding: 25px;
@@ -467,47 +436,34 @@
             font-size: 0.9rem;
         }
 
-        /* Mobile Styles */
         @media screen and (max-width: 768px) {
             body {
                 padding: 15px;
             }
-
             .header h1 {
                 font-size: 2rem;
             }
-
             .tabs {
                 flex-direction: column;
             }
-
-            .tab {
-                text-align: center;
-            }
-
             .admin-actions {
                 flex-direction: column;
             }
-
             .admin-btn {
                 width: 100%;
             }
-
             .item-header {
                 flex-direction: column;
                 gap: 10px;
             }
-
             .item-actions {
                 width: 100%;
                 justify-content: space-between;
             }
-
             .edit-btn, .delete-btn {
                 flex: 1;
                 text-align: center;
             }
-
             .categories-list {
                 grid-template-columns: 1fr;
             }
@@ -527,7 +483,6 @@
             <button class="tab" data-tab="categories">Управление категориями</button>
         </div>
 
-        <!-- Управление меню -->
         <div class="tab-content active" id="menu-tab">
             <div class="admin-panel">
                 <div class="form-section">
@@ -577,7 +532,6 @@
                         <label for="filter-category">Фильтр по категории:</label>
                         <select id="filter-category">
                             <option value="all">Все категории</option>
-                            <!-- Категории будут загружены динамически -->
                         </select>
                     </div>
                     <div class="items-list" id="items-list">
@@ -587,7 +541,6 @@
             </div>
         </div>
 
-        <!-- Управление категориями -->
         <div class="tab-content" id="categories-tab">
             <div class="admin-panel">
                 <div class="form-section">
@@ -632,7 +585,6 @@
     </div>
 
     <script>
-        // Класс для управления меню
         class MenuManager {
             constructor() {
                 this.menuData = this.loadMenuData();
@@ -649,45 +601,62 @@
                 this.renderCategoriesList();
                 this.renderStats();
                 this.bindEvents();
+                
+                // Добавляем начальные данные если их нет
+                if (Object.keys(this.menuData).length === 0) {
+                    this.addInitialData();
+                }
             }
 
             loadMenuData() {
-                const saved = localStorage.getItem('musetti-menu');
-                if (saved) {
-                    return JSON.parse(saved);
+                try {
+                    const saved = localStorage.getItem('musetti-menu');
+                    return saved ? JSON.parse(saved) : {};
+                } catch (e) {
+                    console.error('Error loading menu data:', e);
+                    return {};
                 }
-                
-                // ДЕМО-ДАННЫЕ - можно удалить после тестирования
-                return {
-                    breakfast: [
-                        { id: 1, name: "Итальянский завтрак", description: "Круассан, капучино и свежевыжатый апельсиновый сок", price: 2500 },
-                        { id: 2, name: "Авокадо-тост", description: "Хлеб на закваске с авокадо, яйцом пашот и рукколой", price: 2800 }
-                    ],
-                    drinks: [
-                        { id: 3, name: "Капучино", description: "Классический итальянский капучино с плотной пенкой", price: 1200 },
-                        { id: 4, name: "Лате", description: "Нежный кофейный напиток с молоком", price: 1400 }
-                    ]
-                };
             }
 
             loadCategories() {
-                const saved = localStorage.getItem('musetti-categories');
-                if (saved) {
-                    return JSON.parse(saved);
+                try {
+                    const saved = localStorage.getItem('musetti-categories');
+                    if (saved) {
+                        return JSON.parse(saved);
+                    }
+                } catch (e) {
+                    console.error('Error loading categories:', e);
                 }
                 
                 // Категории по умолчанию
                 return {
-                    breakfast: { name: 'Завтраки', emoji: '🥐' },
-                    drinks: { name: 'Напитки', emoji: '☕' },
-                    bakery: { name: 'Выпечка', emoji: '🥐' },
-                    sandwiches: { name: 'Сэндвичи', emoji: '🥪' },
-                    salads: { name: 'Салаты', emoji: '🥗' },
-                    main: { name: 'Основные блюда', emoji: '🍝' },
-                    meat: { name: 'Мясо и рыба', emoji: '🥩' },
-                    desserts: { name: 'Десерты', emoji: '🍰' },
-                    alcohol: { name: 'Алкоголь', emoji: '🍷' }
+                    zavtraki: { name: 'Завтраки', emoji: '🥐' },
+                    vypechka: { name: 'Выпечка', emoji: '🥖' },
+                    sendvichi: { name: 'Сэндвичи', emoji: '🥪' },
+                    salaty: { name: 'Салаты', emoji: '🥗' },
+                    osnovnye: { name: 'Основные блюда', emoji: '🍝' },
+                    myaso: { name: 'Мясо и рыба', emoji: '🥩' },
+                    deserty: { name: 'Десерты', emoji: '🍰' },
+                    napitki: { name: 'Напитки', emoji: '☕' },
+                    alko: { name: 'Алкоголь', emoji: '🍷' }
                 };
+            }
+
+            addInitialData() {
+                // Добавляем демо-данные
+                this.menuData = {
+                    zavtraki: [
+                        { id: 1, name: "Итальянский завтрак", description: "Круассан, капучино и свежевыжатый апельсиновый сок", price: 2500 },
+                        { id: 2, name: "Авокадо-тост", description: "Хлеб на закваске с авокадо, яйцом пашот и рукколой", price: 2800 }
+                    ],
+                    napitki: [
+                        { id: 3, name: "Капучино", description: "Классический итальянский капучино с плотной пенкой", price: 1200 },
+                        { id: 4, name: "Лате", description: "Нежный кофейный напиток с молоком", price: 1400 }
+                    ]
+                };
+                this.saveMenuData();
+                this.renderItemsList();
+                this.renderStats();
             }
 
             saveMenuData() {
@@ -742,10 +711,6 @@
                         <div class="category-items">
                             <div class="category-title">
                                 <span>${category.name} (${items.length})</span>
-                                <div class="category-actions">
-                                    <button class="edit-btn" onclick="menuManager.editCategory('${categoryId}')">✏️</button>
-                                    <button class="delete-btn" onclick="menuManager.deleteCategory('${categoryId}')" ${items.length > 0 ? 'disabled' : ''}>🗑️</button>
-                                </div>
                             </div>
                             ${items.map(item => `
                                 <div class="item-card">
@@ -785,10 +750,6 @@
                             <div class="category-emoji">${category.emoji}</div>
                             <div class="category-name">${category.name}</div>
                             <div class="category-count">${items.length} блюд</div>
-                            <div class="item-actions">
-                                <button class="edit-btn" onclick="menuManager.editCategory('${id}')">✏️</button>
-                                <button class="delete-btn" onclick="menuManager.deleteCategory('${id}')" ${items.length > 0 ? 'disabled' : ''}>🗑️</button>
-                            </div>
                         </div>
                     `;
                 });
@@ -801,20 +762,13 @@
                 
                 let totalItems = 0;
                 let totalCategories = 0;
-                let averagePrice = 0;
-                let totalPrice = 0;
 
                 Object.entries(this.menuData).forEach(([categoryId, items]) => {
                     if (items && items.length > 0) {
                         totalCategories++;
                         totalItems += items.length;
-                        items.forEach(item => {
-                            totalPrice += item.price;
-                        });
                     }
                 });
-
-                averagePrice = totalItems > 0 ? Math.round(totalPrice / totalItems) : 0;
 
                 container.innerHTML = `
                     <div class="stat-card">
@@ -822,16 +776,12 @@
                         <div class="stat-label">Всего блюд</div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-number">${totalCategories}</div>
+                        <div class="stat-label">Категорий с блюдами</div>
+                    </div>
+                    <div class="stat-card">
                         <div class="stat-number">${Object.keys(this.categories).length}</div>
-                        <div class="stat-label">Категорий</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">${averagePrice.toLocaleString()} ₸</div>
-                        <div class="stat-label">Средняя цена</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">${Math.max(...Object.values(this.menuData).map(items => items ? items.length : 0))}</div>
-                        <div class="stat-label">Макс. в категории</div>
+                        <div class="stat-label">Всего категорий</div>
                     </div>
                 `;
             }
@@ -875,7 +825,6 @@
                 let itemToEdit = null;
                 let categoryToEdit = null;
 
-                // Находим товар и его категорию
                 Object.entries(this.menuData).forEach(([category, items]) => {
                     const item = items.find(item => item.id === id);
                     if (item) {
@@ -892,7 +841,6 @@
                     
                     this.currentImage = itemToEdit.image;
                     const preview = document.getElementById('image-preview');
-                    const fileInput = document.getElementById('item-image');
                     
                     if (itemToEdit.image) {
                         preview.src = itemToEdit.image;
@@ -901,16 +849,13 @@
                         preview.classList.remove('show');
                     }
                     
-                    // Сбрасываем file input
-                    fileInput.value = '';
+                    document.getElementById('item-image').value = '';
 
                     document.getElementById('add-item').style.display = 'none';
                     document.getElementById('update-item').style.display = 'block';
                     this.currentEditId = id;
 
-                    // Переключаем на вкладку меню
                     this.switchTab('menu');
-                    document.getElementById('menu-form').scrollIntoView({ behavior: 'smooth' });
                 }
             }
 
@@ -927,7 +872,6 @@
                     return;
                 }
 
-                // Удаляем товар из старой категории
                 let oldCategory = null;
                 Object.entries(this.menuData).forEach(([cat, items]) => {
                     const index = items.findIndex(item => item.id === this.currentEditId);
@@ -937,7 +881,6 @@
                     }
                 });
 
-                // Добавляем в новую категорию
                 if (!this.menuData[category]) {
                     this.menuData[category] = [];
                 }
@@ -989,7 +932,6 @@
                     return;
                 }
 
-                // Проверяем валидность ID
                 if (!/^[a-z]+$/.test(id)) {
                     alert('ID категории должен содержать только английские буквы в нижнем регистре!');
                     return;
@@ -1007,35 +949,6 @@
                 this.clearCategoryForm();
                 
                 alert('Категория успешно добавлена!');
-            }
-
-            editCategory(id) {
-                const category = this.categories[id];
-                if (category) {
-                    document.getElementById('category-id').value = id;
-                    document.getElementById('category-name').value = category.name;
-                    document.getElementById('category-emoji').value = category.emoji;
-                    
-                    // Переключаем на вкладку категорий
-                    this.switchTab('categories');
-                    document.getElementById('category-form').scrollIntoView({ behavior: 'smooth' });
-                }
-            }
-
-            deleteCategory(id) {
-                if (!confirm('Вы уверены, что хотите удалить эту категорию? Все блюда в этой категории будут удалены!')) return;
-
-                delete this.categories[id];
-                delete this.menuData[id];
-                
-                this.saveCategories();
-                this.saveMenuData();
-                this.renderCategorySelects();
-                this.renderCategoriesList();
-                this.renderItemsList();
-                this.renderStats();
-                
-                alert('Категория успешно удалена!');
             }
 
             cancelEdit() {
@@ -1061,7 +974,6 @@
             handleImageUpload(event) {
                 const file = event.target.files[0];
                 if (file) {
-                    // Проверяем размер файла (максимум 5MB)
                     if (file.size > 5 * 1024 * 1024) {
                         alert('Файл слишком большой! Максимальный размер: 5MB');
                         event.target.value = '';
@@ -1080,7 +992,6 @@
             }
 
             switchTab(tabName) {
-                // Скрыть все вкладки
                 document.querySelectorAll('.tab-content').forEach(tab => {
                     tab.classList.remove('active');
                 });
@@ -1088,52 +999,43 @@
                     tab.classList.remove('active');
                 });
 
-                // Показать выбранную вкладку
                 document.getElementById(`${tabName}-tab`).classList.add('active');
                 document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
             }
 
             bindEvents() {
-                // Переключение вкладок
                 document.querySelectorAll('.tab').forEach(tab => {
                     tab.addEventListener('click', () => {
                         this.switchTab(tab.dataset.tab);
                     });
                 });
 
-                // Добавление товара
                 document.getElementById('menu-form').addEventListener('submit', (e) => {
                     this.addItem(e);
                 });
 
-                // Обновление товара
                 document.getElementById('update-item').addEventListener('click', () => {
                     this.updateItem();
                 });
 
-                // Отмена редактирования
                 document.getElementById('cancel-edit').addEventListener('click', () => {
                     this.cancelEdit();
                 });
 
-                // Фильтрация по категории
                 document.getElementById('filter-category').addEventListener('change', () => {
                     this.renderItemsList();
                 });
 
-                // Загрузка изображения
                 document.getElementById('item-image').addEventListener('change', (e) => {
                     this.handleImageUpload(e);
                 });
 
-                // Добавление категории
                 document.getElementById('category-form').addEventListener('submit', (e) => {
                     this.addCategory(e);
                 });
             }
         }
 
-        // Инициализация менеджера меню
         const menuManager = new MenuManager();
     </script>
 </body>

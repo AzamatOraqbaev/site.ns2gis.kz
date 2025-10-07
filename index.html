@@ -6,6 +6,7 @@
     <title>Caffè Musetti | Меню</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        /* Все стили остаются такими же как в предыдущей версии */
         :root {
             --color-red: #E30613;
             --color-black: #000000;
@@ -42,7 +43,6 @@
             padding: 0 20px;
         }
 
-        /* Header */
         header {
             background: var(--color-card);
             padding: 15px 0;
@@ -97,7 +97,6 @@
             border-color: var(--color-red);
         }
 
-        /* Navigation Container */
         .nav-container {
             flex-grow: 1;
             margin: 0 20px;
@@ -139,7 +138,6 @@
             border-color: var(--color-red);
         }
 
-        /* Navigation Arrows */
         .nav-arrow {
             position: absolute;
             top: 50%;
@@ -172,7 +170,6 @@
             right: 0;
         }
 
-        /* Breakfast Highlight */
         .breakfast-highlight {
             background: var(--color-red);
             color: var(--color-white);
@@ -187,7 +184,6 @@
             z-index: 999;
         }
 
-        /* Main Content */
         main {
             padding: 20px 0 60px;
         }
@@ -301,7 +297,6 @@
             transform: translateY(-1px);
         }
 
-        /* Floating Cart Button */
         .floating-cart-btn {
             position: fixed;
             bottom: 30px;
@@ -343,7 +338,6 @@
             font-weight: 600;
         }
 
-        /* Cart Modal */
         .cart-modal {
             display: none;
             position: fixed;
@@ -501,7 +495,6 @@
             padding: 40px 0;
         }
 
-        /* Footer */
         footer {
             background: var(--color-card);
             color: var(--color-primary);
@@ -534,69 +527,55 @@
             margin-top: 15px;
         }
 
-        /* Mobile Styles */
         @media screen and (max-width: 768px) {
             .container {
                 padding: 0 15px;
             }
-
             .header-content {
                 flex-direction: column;
                 gap: 15px;
             }
-
             .logo h1 {
                 font-size: 1.6rem;
             }
-
             .nav-container {
                 margin: 0 10px;
                 width: 100%;
             }
-
             nav {
                 gap: 4px;
                 padding: 5px 30px;
             }
-
             nav a {
                 font-size: 0.75rem;
                 padding: 5px 10px;
             }
-
             .breakfast-highlight {
                 top: 125px;
                 font-size: 0.8rem;
                 padding: 6px 0;
             }
-
             body {
                 padding-top: 160px;
             }
-
             .menu-items {
                 grid-template-columns: 1fr;
                 gap: 15px;
             }
-
             .menu-details {
                 padding: 15px;
             }
-
             .menu-category {
                 margin-bottom: 50px;
                 scroll-margin-top: 180px;
             }
-
             .cart-modal-content {
                 padding: 20px;
                 width: 95%;
             }
-
             .nav-arrow {
                 display: flex;
             }
-
             .floating-cart-btn {
                 bottom: 20px;
                 right: 20px;
@@ -609,36 +588,29 @@
             .logo h1 {
                 font-size: 1.4rem;
             }
-
             nav a {
                 font-size: 0.7rem;
                 padding: 4px 8px;
             }
-
             .menu-item-image {
                 height: 160px;
             }
-
             .breakfast-highlight {
                 top: 140px;
                 font-size: 0.75rem;
                 padding: 5px 0;
             }
-
             body {
                 padding-top: 170px;
             }
-
             .menu-category {
                 scroll-margin-top: 190px;
             }
-
             .nav-arrow {
                 width: 25px;
                 height: 25px;
                 font-size: 0.8rem;
             }
-
             .floating-cart-btn {
                 bottom: 15px;
                 right: 15px;
@@ -647,7 +619,6 @@
             }
         }
 
-        /* Hide arrows on desktop */
         @media screen and (min-width: 769px) {
             .nav-arrow {
                 display: none;
@@ -677,18 +648,15 @@
         </div>
     </header>
 
-    <!-- Breakfast Highlight -->
     <div class="breakfast-highlight">
         🍳 Завтраки подаются с 8:00 до 12:00
     </div>
 
-    <!-- Floating Cart Button -->
     <button class="floating-cart-btn" id="floating-cart-btn">
         <span>Корзина</span>
         <span class="cart-badge" id="cart-badge">0</span>
     </button>
 
-    <!-- Cart Modal -->
     <div class="cart-modal" id="cart-modal">
         <div class="cart-modal-content">
             <div class="cart-header">
@@ -725,7 +693,6 @@
     </footer>
 
     <script>
-        // Класс для отображения меню
         class MenuDisplay {
             constructor() {
                 this.menuData = this.loadMenuData();
@@ -736,21 +703,29 @@
             init() {
                 this.renderNavigation();
                 this.renderMenu();
+                console.log('Menu data:', this.menuData);
+                console.log('Categories:', this.categories);
             }
 
             loadMenuData() {
-                const saved = localStorage.getItem('musetti-menu');
-                if (saved) {
-                    return JSON.parse(saved);
+                try {
+                    const saved = localStorage.getItem('musetti-menu');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        console.log('Loaded menu data:', data);
+                        return data;
+                    }
+                } catch (e) {
+                    console.error('Error loading menu:', e);
                 }
                 
-                // ДЕМО-ДАННЫЕ
+                // Демо-данные если ничего нет
                 return {
-                    breakfast: [
+                    zavtraki: [
                         { id: 1, name: "Итальянский завтрак", description: "Круассан, капучино и свежевыжатый апельсиновый сок", price: 2500 },
                         { id: 2, name: "Авокадо-тост", description: "Хлеб на закваске с авокадо, яйцом пашот и рукколой", price: 2800 }
                     ],
-                    drinks: [
+                    napitki: [
                         { id: 3, name: "Капучино", description: "Классический итальянский капучино с плотной пенкой", price: 1200 },
                         { id: 4, name: "Лате", description: "Нежный кофейный напиток с молоком", price: 1400 }
                     ]
@@ -758,45 +733,54 @@
             }
 
             loadCategories() {
-                const saved = localStorage.getItem('musetti-categories');
-                if (saved) {
-                    return JSON.parse(saved);
+                try {
+                    const saved = localStorage.getItem('musetti-categories');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        console.log('Loaded categories:', data);
+                        return data;
+                    }
+                } catch (e) {
+                    console.error('Error loading categories:', e);
                 }
                 
                 // Категории по умолчанию
                 return {
-                    breakfast: { name: 'Завтраки', emoji: '🥐' },
-                    drinks: { name: 'Напитки', emoji: '☕' },
-                    bakery: { name: 'Выпечка', emoji: '🥐' },
-                    sandwiches: { name: 'Сэндвичи', emoji: '🥪' },
-                    salads: { name: 'Салаты', emoji: '🥗' },
-                    main: { name: 'Основные блюда', emoji: '🍝' },
-                    meat: { name: 'Мясо и рыба', emoji: '🥩' },
-                    desserts: { name: 'Десерты', emoji: '🍰' },
-                    alcohol: { name: 'Алкоголь', emoji: '🍷' }
+                    zavtraki: { name: 'Завтраки', emoji: '🥐' },
+                    vypechka: { name: 'Выпечка', emoji: '🥖' },
+                    sendvichi: { name: 'Сэндвичи', emoji: '🥪' },
+                    salaty: { name: 'Салаты', emoji: '🥗' },
+                    osnovnye: { name: 'Основные блюда', emoji: '🍝' },
+                    myaso: { name: 'Мясо и рыба', emoji: '🥩' },
+                    deserty: { name: 'Десерты', emoji: '🍰' },
+                    napitki: { name: 'Напитки', emoji: '☕' },
+                    alko: { name: 'Алкоголь', emoji: '🍷' }
                 };
             }
 
             renderNavigation() {
                 const nav = document.getElementById('main-nav');
                 let html = '';
+                let hasCategories = false;
 
                 Object.entries(this.categories).forEach(([id, category]) => {
                     const items = this.menuData[id];
                     if (items && items.length > 0) {
+                        hasCategories = true;
                         const isActive = id === Object.keys(this.categories)[0] ? 'active' : '';
                         html += `<a href="#${id}" class="${isActive}">${category.name}</a>`;
                     }
                 });
 
-                nav.innerHTML = html;
+                if (!hasCategories) {
+                    html = '<a href="#demo" class="active">Меню</a>';
+                }
 
-                // Добавляем обработчики событий для навигации
+                nav.innerHTML = html;
                 this.bindNavigationEvents();
             }
 
             bindNavigationEvents() {
-                // Smooth scroll for navigation
                 document.querySelectorAll('nav a').forEach(anchor => {
                     anchor.addEventListener('click', function (e) {
                         e.preventDefault();
@@ -808,7 +792,6 @@
                                 behavior: 'smooth'
                             });
                             
-                            // Обновляем активную ссылку
                             document.querySelectorAll('nav a').forEach(link => {
                                 link.classList.remove('active');
                             });
@@ -821,10 +804,12 @@
             renderMenu() {
                 const container = document.getElementById('menu-container');
                 let html = '';
+                let hasItems = false;
 
                 Object.entries(this.categories).forEach(([categoryId, category]) => {
                     const items = this.menuData[categoryId];
                     if (items && items.length > 0) {
+                        hasItems = true;
                         html += `
                             <section id="${categoryId}" class="menu-category">
                                 <h2>${category.name.toUpperCase()}</h2>
@@ -838,7 +823,7 @@
                                                 <h3>${item.name}</h3>
                                                 <div class="description">${item.description}</div>
                                                 <div class="item-footer">
-                                                    <div class="price">${item.price ? item.price.toLocaleString() : '0'} ₸</div>
+                                                    <div class="price">${item.price.toLocaleString()} ₸</div>
                                                     <button class="add-btn" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}">+</button>
                                                 </div>
                                             </div>
@@ -850,14 +835,31 @@
                     }
                 });
 
+                if (!hasItems) {
+                    html = `
+                        <section id="demo" class="menu-category">
+                            <h2>ДОБРО ПОЖАЛОВАТЬ В CAFFÈ MUSETTI</h2>
+                            <div class="menu-items">
+                                <div class="menu-item">
+                                    <div class="menu-item-image">🥐</div>
+                                    <div class="menu-details">
+                                        <h3>Перейдите в админ-панель</h3>
+                                        <div class="description">Для начала работы с меню перейдите в админ-панель и добавьте блюда</div>
+                                        <div class="item-footer">
+                                            <div class="price"></div>
+                                            <a href="admin.html" class="add-btn" style="text-decoration: none;">Перейти</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    `;
+                }
+
                 container.innerHTML = html;
             }
         }
 
-        // Инициализация отображения меню
-        const menuDisplay = new MenuDisplay();
-
-        // Класс корзины
         class Cart {
             constructor() {
                 this.items = [];
@@ -873,25 +875,24 @@
             }
 
             bindEvents() {
-                // Кнопки добавления (делегирование событий)
                 document.addEventListener('click', (e) => {
                     if (e.target.classList.contains('add-btn')) {
                         const id = e.target.dataset.id;
                         const name = e.target.dataset.name;
                         const price = parseInt(e.target.dataset.price);
-                        this.addItem(id, name, price);
-                        
-                        // Анимация кнопки
-                        e.target.textContent = '✓';
-                        e.target.style.background = 'var(--color-success)';
-                        setTimeout(() => {
-                            e.target.textContent = '+';
-                            e.target.style.background = 'var(--color-red)';
-                        }, 1000);
+                        if (id && name && price) {
+                            this.addItem(id, name, price);
+                            
+                            e.target.textContent = '✓';
+                            e.target.style.background = 'var(--color-success)';
+                            setTimeout(() => {
+                                e.target.textContent = '+';
+                                e.target.style.background = 'var(--color-red)';
+                            }, 1000);
+                        }
                     }
                 });
 
-                // Открытие/закрытие корзины
                 document.getElementById('floating-cart-btn').addEventListener('click', () => {
                     this.openCart();
                 });
@@ -900,19 +901,16 @@
                     this.closeCart();
                 });
 
-                // Оформление заказа
                 document.querySelector('.checkout-btn-modal').addEventListener('click', () => {
                     this.checkout();
                 });
 
-                // Закрытие корзины по клику вне области
                 document.getElementById('cart-modal').addEventListener('click', (e) => {
                     if (e.target.id === 'cart-modal') {
                         this.closeCart();
                     }
                 });
 
-                // Обработка клавиши Escape
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') {
                         this.closeCart();
@@ -966,10 +964,8 @@
             updateCartDisplay() {
                 this.calculateTotal();
                 
-                // Обновляем бейдж на плавающей кнопке
                 document.getElementById('cart-badge').textContent = this.count;
                 
-                // Обновляем содержимое модальной корзины
                 const cartItems = document.getElementById('cart-items');
                 const cartTotalModal = document.getElementById('cart-total-modal');
                 
@@ -996,7 +992,6 @@
             }
 
             showAddNotification(itemName) {
-                // Создаем временное уведомление
                 const notification = document.createElement('div');
                 notification.style.cssText = `
                     position: fixed;
@@ -1057,22 +1052,23 @@
             }
 
             loadFromStorage() {
-                const saved = localStorage.getItem('musetti-cart');
-                if (saved) {
-                    this.items = JSON.parse(saved);
+                try {
+                    const saved = localStorage.getItem('musetti-cart');
+                    if (saved) {
+                        this.items = JSON.parse(saved);
+                    console.log('Loaded cart items:', this.items);
+                    }
+                } catch (e) {
+                    console.error('Error loading cart:', e);
                 }
             }
         }
 
-        // Инициализация корзины
+        // Инициализация
+        const menuDisplay = new MenuDisplay();
         const cart = new Cart();
 
-        // Navigation scrolling with active section update
-        const nav = document.getElementById('main-nav');
-        const leftArrow = document.querySelector('.nav-arrow.left');
-        const rightArrow = document.querySelector('.nav-arrow.right');
-
-        // Функция для обновления активного раздела на основе видимости
+        // Навигация
         function updateActiveSectionOnScroll() {
             const sections = document.querySelectorAll('.menu-category');
             const navLinks = document.querySelectorAll('nav a');
@@ -1082,7 +1078,6 @@
             
             sections.forEach(section => {
                 const sectionTop = section.offsetTop - 160;
-                const sectionHeight = section.offsetHeight;
                 const distance = Math.abs(window.scrollY - sectionTop);
                 
                 if (distance < minDistance && window.scrollY >= sectionTop - 100) {
@@ -1099,7 +1094,10 @@
             });
         }
 
-        // Обработчики для стрелок навигации
+        const nav = document.getElementById('main-nav');
+        const leftArrow = document.querySelector('.nav-arrow.left');
+        const rightArrow = document.querySelector('.nav-arrow.right');
+
         if (leftArrow && rightArrow) {
             leftArrow.addEventListener('click', () => {
                 nav.scrollBy({ left: -200, behavior: 'smooth' });
@@ -1110,18 +1108,14 @@
             });
         }
 
-        // Active section highlighting on page scroll
         window.addEventListener('scroll', updateActiveSectionOnScroll);
-
-        // Также обновляем при загрузке страницы
         document.addEventListener('DOMContentLoaded', updateActiveSectionOnScroll);
 
-        // Обновляем активный раздел при прокрутке навигации
         if (nav) {
             nav.addEventListener('scroll', updateActiveSectionOnScroll);
         }
 
-        // Добавляем CSS для анимации уведомлений
+        // CSS для анимаций
         const style = document.createElement('style');
         style.textContent = `
             @keyframes slideIn {
@@ -1136,6 +1130,9 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Логи для отладки
+        console.log('Caffè Musetti menu initialized successfully');
     </script>
 </body>
 </html>
